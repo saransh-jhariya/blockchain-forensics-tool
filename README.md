@@ -96,6 +96,62 @@ python main.py -s 0x... -g elliptic_labels.json
 
 ---
 
+## Quick Start with Scripts
+
+### Run Complete Pipeline (Tests + Execution)
+
+```bash
+# Make scripts executable
+chmod +x run.sh test.sh
+
+# Run everything (tests + pipeline with default USDT address)
+./run.sh
+
+# Run with custom seed address
+./run.sh -s 0xYourAddressHere -v
+
+# Run tests only
+./run.sh --tests-only
+
+# Run pipeline only (skip tests)
+./run.sh --pipeline-only
+```
+
+### Run Tests Only
+
+```bash
+# Run all tests with coverage report
+./test.sh
+
+# View HTML coverage report
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+start htmlcov\\index.html  # Windows
+```
+
+### Script Options
+
+**run.sh options:**
+| Option | Description |
+|--------|-------------|
+| `-s, --seed ADDRESS` | Seed Ethereum address |
+| `-c, --chain CHAIN` | Blockchain (ethereum, polygon, etc.) |
+| `-o, --output DIR` | Output directory |
+| `-v, --verbose` | Verbose logging |
+| `-t, --tests-only` | Run only tests |
+| `-p, --pipeline-only` | Run only pipeline |
+| `-h, --help` | Show help |
+
+**Environment Variables:**
+```bash
+export SEED_ADDRESS=0x...
+export CHAIN=ethereum
+export VERBOSE=true
+./run.sh
+```
+
+---
+
 ## Five-Phase Methodology
 
 ### Phase 1: Multi-Source Data Acquisition
