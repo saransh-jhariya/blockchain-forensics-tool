@@ -1,0 +1,108 @@
+# GitHub Actions Workflow for Blockchain Forensics Tool
+# M.Sc. Forensic Science (Cyber Forensics) - 9th Semester
+# Author: Saransh Jhariya | 102FSBSMS2122012
+
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest pytest-cov
+      
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install flake8
+        run: pip install flake8
+      
+      - name: Run flake8 linting
+        run: |
+          # Stop build if there are critical errors
+          flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Show all warnings
+          flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      
+      - name: Verify imports
+        run: |
+          python -c "from src.pipeline import BlockchainForensicsPipeline; print('All imports successful')"
+      
+      - name: Create distribution package
+        run: |
+          mkdir -p dist
+          tar -czf dist/blockchain-forensics-tool.tar.gz \
+            --exclude='.git' \
+            --exclude='data' \
+            --exclude='logs' \
+            --exclude='.env' \
+            --exclude='__pycache__' \
+            .
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockchain-forensics-tool
+          path: dist/
+          retention-days: 30
