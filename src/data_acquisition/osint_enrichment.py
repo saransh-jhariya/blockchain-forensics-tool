@@ -114,28 +114,37 @@ class OSINTEnrichmentClient:
             Dictionary of address -> is_sanctioned
         """
         results = {}
-        
+
         # Load OFAC list if not already loaded
         if self._ofac_list is None:
             self._load_ofac_list()
-        
-        if self._ofac_list is None:
+
+        if self._ofac_list is None or len(self._ofac_list) == 0:
             # Fallback: check against known sanctioned addresses
             sanctioned_addresses = self._get_known_sanctioned_addresses()
             for address in addresses:
                 addr_lower = normalize_address(address).lower()
                 results[address] = addr_lower in [s.lower() for s in sanctioned_addresses]
             return results
-        
-        # Check against OFAC list
+
+        # Check against OFAC list - handle both string and dict formats
         for address in addresses:
             addr_lower = normalize_address(address).lower()
-            is_sanctioned = any(
-                addr_lower == entry.get("address", "").lower()
-                for entry in self._ofac_list
-            )
+            
+            # Check if OFAC list contains strings or dicts
+            if self._ofac_list and isinstance(self._ofac_list[0], str):
+                # List of address strings
+                is_sanctioned = addr_lower in [s.lower() for s in self._ofac_list]
+            else:
+                # List of dictionaries
+                is_sanctioned = any(
+                    addr_lower == str(entry.get("address", "")).lower()
+                    for entry in self._ofac_list
+                    if isinstance(entry, dict)
+                )
+            
             results[address] = is_sanctioned
-        
+
         return results
     
     def _load_ofac_list(self):
