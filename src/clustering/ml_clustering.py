@@ -40,65 +40,78 @@ class DBSCANClustering:
         self.model = DBSCAN(eps=eps, min_samples=min_samples, metric=metric)
         self.labels = None
         self.feature_matrix = None
-    
+
     def optimize_eps(self, feature_matrix: pd.DataFrame, k: int = 4) -> float:
         """
         Optimize epsilon parameter using k-distance plot.
-        
+
         Args:
             feature_matrix: Normalized feature matrix
             k: Number of nearest neighbors
-            
+
         Returns:
             Optimal epsilon value
         """
         logger.info(f"Optimizing epsilon parameter using k-distance plot (k={k})")
+
+        # Handle edge case: not enough samples
+        n_samples = len(feature_matrix)
+        if n_samples < k:
+            logger.warning(f"Not enough samples ({n_samples}) for k-distance optimization (k={k}). Using default eps=0.5")
+            return 0.5
         
         # Fit nearest neighbors
-        nbrs = NearestNeighbors(n_neighbors=k, metric=self.metric)
+        nbrs = NearestNeighbors(n_neighbors=min(k, n_samples - 1), metric=self.metric)
         nbrs.fit(feature_matrix)
-        
+
         # Get k-distances
         distances, _ = nbrs.kneighbors(feature_matrix)
         k_distances = distances[:, -1]  # Distance to k-th nearest neighbor
-        
+
         # Sort distances
         k_distances_sorted = np.sort(k_distances)
-        
+
         # Find elbow point using maximum curvature
         # Simple approach: find point with maximum second derivative
         if len(k_distances_sorted) > 10:
             x = np.arange(len(k_distances_sorted))
             y = k_distances_sorted
-            
+
             # Calculate first and second derivatives
             first_deriv = np.gradient(y)
             second_deriv = np.gradient(first_deriv)
-            
+
             # Find point of maximum curvature
             elbow_idx = np.argmax(second_deriv)
             optimal_eps = y[elbow_idx]
         else:
             # Fallback: use median distance
             optimal_eps = np.median(k_distances)
-        
+
         logger.info(f"Optimal epsilon: {optimal_eps:.4f}")
         return optimal_eps
-    
+
     def fit(self, feature_matrix: pd.DataFrame, auto_optimize_eps: bool = True) -> np.ndarray:
         """
         Fit DBSCAN model to feature matrix.
-        
+
         Args:
             feature_matrix: Normalized feature matrix (n_addresses × n_features)
             auto_optimize_eps: Whether to automatically optimize epsilon
-            
+
         Returns:
             Cluster labels for each address
         """
         logger.info("Starting Layer B: ML-Based Clustering (DBSCAN)")
-        
+
         self.feature_matrix = feature_matrix
+        
+        # Handle edge case: not enough samples for DBSCAN
+        n_samples = len(feature_matrix)
+        if n_samples < 2:
+            logger.warning(f"Not enough samples ({n_samples}) for DBSCAN. Marking all as noise.")
+            self.labels = np.array([-1] * n_samples)  # All noise
+            return self.labels
         
         # Optimize epsilon if requested
         if auto_optimize_eps:
