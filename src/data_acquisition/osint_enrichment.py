@@ -226,30 +226,39 @@ class OSINTEnrichmentClient:
     def enrich_addresses(self, addresses: List[str]) -> Dict[str, Dict]:
         """
         Perform full OSINT enrichment on addresses.
-        
+
         Args:
             addresses: List of addresses to enrich
-            
+
         Returns:
             Dictionary of address -> enrichment data
         """
         logger.info(f"Enriching {len(addresses)} addresses with OSINT data")
-        
+
         enrichment = {}
-        
+
         # Get Etherscan labels
         labels = self.get_etherscan_labels(addresses)
-        
+
         # Check OFAC SDN
         ofac_results = self.check_ofac_sdn(addresses)
-        
+
         for address in addresses:
             addr = normalize_address(address)
+            
+            # Safely get label data
+            label_data = labels.get(addr, {}) if isinstance(labels, dict) else {}
+            label_text = label_data.get("label") if isinstance(label_data, dict) else None
+            label_cat = label_data.get("category") if isinstance(label_data, dict) else None
+            
+            # Safely get OFAC result
+            is_sanctioned = ofac_results.get(address, False) if isinstance(ofac_results, dict) else False
+            
             enrichment[addr] = {
                 "address": addr,
-                "label": labels.get(addr, {}).get("label"),
-                "label_category": labels.get(addr, {}).get("category"),
-                "is_sanctioned": ofac_results.get(address, False),
+                "label": label_text,
+                "label_category": label_cat,
+                "is_sanctioned": is_sanctioned,
                 "is_mixer": addr.lower() in [m.lower() for m in KNOWN_MIXERS],
                 "is_vasp": any(
                     addr.lower() in [a.lower() for a in addrs]

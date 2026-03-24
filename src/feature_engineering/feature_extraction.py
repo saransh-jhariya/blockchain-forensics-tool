@@ -420,21 +420,28 @@ class OSINTFeatureExtractor:
             addresses: List of addresses
             enrichment_data: OSINT enrichment data from Phase 1
             graph_features: Graph features for proximity calculation
-            
+
         Returns:
             Dictionary of address -> OSINT features
         """
         features = {}
-        
-        # Get VASP addresses
+
+        # Get VASP addresses - with type safety
         vasp_addresses = set()
-        for addr, data in enrichment_data.items():
-            if data.get("is_vasp"):
-                vasp_addresses.add(addr.lower())
-        
+        if isinstance(enrichment_data, dict):
+            for addr, data in enrichment_data.items():
+                if isinstance(data, dict) and data.get("is_vasp"):
+                    vasp_addresses.add(addr.lower())
+
         for address in addresses:
             addr = normalize_address(address)
-            enrichment = enrichment_data.get(addr, {})
+            
+            # Safely get enrichment data with type checking
+            enrichment = {}
+            if isinstance(enrichment_data, dict):
+                enrichment = enrichment_data.get(addr, {})
+                if not isinstance(enrichment, dict):
+                    enrichment = {}
             
             features[addr] = {
                 "is_sanctioned": 1 if enrichment.get("is_sanctioned", False) else 0,
@@ -450,7 +457,7 @@ class OSINTFeatureExtractor:
                 "exchange_proximity_score": 0,  # Would require BFS calculation
                 "bridge_interaction_flag": 0,  # Set from bridge events
             }
-        
+
         return features
 
 
