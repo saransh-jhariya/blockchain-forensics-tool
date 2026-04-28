@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  /* Dark mode blockchain forensics theme */
+  --background: #0a0a12;
+  --foreground: #f0f0f8;
+  --card: #141420;
+  --card-foreground: #e8e8f0;
+  
+  /* Primary - Deep blue */
+  --primary: #2563eb;
+  --primary-foreground: #f8fafc;
+  
+  /* Accent - Cyan/Teal neon */
+  --accent: #00d9ff;
+  --accent-foreground: #0a0a12;
+  
+  /* Secondary - Purple highlight */
+  --secondary: #8b5cf6;
+  --secondary-foreground: #f8fafc;
+  
+  /* Status colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  /* Borders and inputs */
+  --border: rgba(0, 217, 255, 0.1);
+  --input: #1a1a24;
+  
+  /* Radius */
+  --radius: 8px;
+}
+
+html {
+  background-color: var(--background);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  color-scheme: dark;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 217, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 217, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 217, 255, 0.5);
+}
+
+/* Glassmorphism effect */
+.glass {
+  background-color: rgba(20, 20, 32, 0.3);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* Glow effect for accent elements */
+.glow-accent {
+  box-shadow: 0 10px 25px -5px rgba(0, 217, 255, 0.2);
+}
+
+.glow-primary {
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);
+}
