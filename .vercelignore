@@ -1,0 +1,12 @@
+*.py
+*.toml
+.env
+.git
+.gitignore
+node_modules
+dist
+build
+.next
+src/**/*.md
+docs
+README.md
